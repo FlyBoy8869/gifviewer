@@ -5,11 +5,8 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import QObject, QRect, Qt, pyqtSlot
 from PyQt5.QtGui import QIntValidator, QMovie
 from PyQt5.QtWidgets import QFileDialog, QListWidgetItem
-from icecream import ic
 
 from gifviewer import helpers
-
-ic.configureOutput(includeContext=True)
 
 
 class MainViewController(QObject):
@@ -33,20 +30,22 @@ class MainViewController(QObject):
         self._view.gif_list.itemPressed.connect(self._gif_list_item_pressed)
         self._view.gif_list.currentItemChanged.connect(self._gif_list_current_item_changed)
 
+        self._model.files_changed.connect(self._populate_gif_list)
+
         self._view.single_step.toggled.connect(self._single_step_toggled)
 
     def initialize_controller(self):
         self._view.frame_number.setValidator(self._frame_validator)
 
         self._update_speed_label(self.DEFAULT_MOVIE_SPEED)
-        self._populate_gif_list_from_path(self._model.get_files(Path("/Users/charles/Downloads")))
+        self._model.update_files_from_path(Path("/Users/charles/Downloads"))
 
     @pyqtSlot(bool)  # QPushButton::clicked(), QAction::triggered()
     def _browse_for_folder(self, _: bool):
         path = QFileDialog.getExistingDirectory(self._view, "Select Directory", ".")
         if path:
             self._view.reset()
-            self._populate_gif_list_from_path(self._model.get_files(Path(path)))
+            self._model.update_files_from_path(Path(path))
 
     @pyqtSlot(QListWidgetItem, QListWidgetItem)  # QListWidget::currentItemChanged()
     def _gif_list_current_item_changed(self, current: QListWidgetItem, _):
@@ -78,7 +77,8 @@ class MainViewController(QObject):
         )
         self._view.play_movie()
 
-    def _populate_gif_list_from_path(self, files: List[Path]):
+    @pyqtSlot(list)
+    def _populate_gif_list(self, files: List[Path]):
         if not files:
             self._current_file_path = None
             self._view.single_step.setEnabled(False)
@@ -143,18 +143,18 @@ class MainViewController(QObject):
         self._stop_movie()
 
         movie = self._view.movie()
-        frame_count = ic(movie.frameCount() - 1)
+        frame_count = movie.frameCount() - 1
 
         self._view.frame_slider.setMinimum(0)
         self._view.frame_slider.setMaximum(frame_count)
 
-        self._view.frame_slider.valueChanged.connect(lambda frame: movie.jumpToFrame(ic(frame)))
+        self._view.frame_slider.valueChanged.connect(lambda frame: movie.jumpToFrame(frame))
         self._view.frame_slider.valueChanged.connect(lambda frame: self._view.frame_number.setText(str(frame)))
 
         self._frame_validator.setTop(frame_count)
 
         self._view.frame_number.returnPressed.connect(
-            lambda: self._view.frame_slider.setValue(ic(int(self._view.frame_number.text())))
+            lambda: self._view.frame_slider.setValue(int(self._view.frame_number.text()))
         )
 
         _setup_starting_frame(current_frame=movie.currentFrameNumber(), last_frame=frame_count)
