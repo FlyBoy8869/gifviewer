@@ -19,7 +19,6 @@ class MainViewController(QObject):
         self._model = model
         self._frame_validator = QIntValidator(0, 0)
         self._current_file_path = None
-        self.movie_update_in_progress = False
         self.original_base_role_color = view.frame.palette().color(QtGui.QPalette.Base)
 
         self._view.pushButtonBrowse.clicked.connect(self._browse_for_folder)
@@ -27,10 +26,16 @@ class MainViewController(QObject):
         self._view.loop.toggled.connect(self._play_movie)
         self._view.speed_slider.valueChanged.connect(self._update_speed_label)
         self._view.speed_slider.sliderReleased.connect(self._speed_changed)
-        self._view.gif_list.itemPressed.connect(self._gif_list_item_pressed)
-        self._view.gif_list.currentItemChanged.connect(self._gif_list_current_item_changed)
+
+        self._view.gif_list.currentItemChanged.connect(
+            lambda current, _: current and self._set_gif_display_movie_from_string(current.file_path)
+        )
+        self._view.gif_list.itemPressed.connect(
+            lambda item: self._set_gif_display_movie_from_string(item.file_path)
+        )
 
         self._model.files_changed.connect(self._populate_gif_list)
+        self._model.first_file.connect(self._set_gif_display_movie_from_string)
 
         self._view.single_step.toggled.connect(self._single_step_toggled)
 
@@ -38,7 +43,7 @@ class MainViewController(QObject):
         self._view.frame_number.setValidator(self._frame_validator)
 
         self._update_speed_label(self.DEFAULT_MOVIE_SPEED)
-        self._model.update_files_from_path(Path("/Users/charles/Downloads"))
+        self._model.update_files_from_path(Path("/Users/charles/Downloads/assets"))
 
     @pyqtSlot(bool)  # QPushButton::clicked(), QAction::triggered()
     def _browse_for_folder(self, _: bool):
@@ -46,27 +51,6 @@ class MainViewController(QObject):
         if path:
             self._view.reset()
             self._model.update_files_from_path(Path(path))
-
-    @pyqtSlot(QListWidgetItem, QListWidgetItem)  # QListWidget::currentItemChanged()
-    def _gif_list_current_item_changed(self, current: QListWidgetItem, _):
-        if current:
-            self._view.set_title(str(current.file_path))
-
-            # prevent animation from playing on QListWidget creation
-            if self._view.gif_list.startup:
-                self._view.gif_list.startup = False
-                return
-
-            self.movie_update_in_progress = True
-            self._set_gif_display_movie_from_string(current.file_path)
-
-        self._view.normal_play.setChecked(True)
-        self._view.set_nav_controls_visible(False)
-
-    @pyqtSlot(QListWidgetItem)  # QListWidget::itemPressed()
-    def _gif_list_item_pressed(self, item):
-        if self._view.movie().state() == QMovie.NotRunning or self._view.loop.isChecked():
-            self._set_gif_display_movie_from_string(item.file_path)
 
     def _play_movie(self):
         self._view.update_widget_palette(
@@ -94,13 +78,13 @@ class MainViewController(QObject):
         # update
         self._view.set_file_count(self._model.count)
         self._view.gif_list.setCurrentItem(self._view.gif_list.item(0))
-        self._set_gif_display_movie_from_string(self._view.gif_list.item(0).file_path)
         self._view.set_speed(self.DEFAULT_MOVIE_SPEED)
         self._update_status_bar()
 
         self._view.single_step.setEnabled(True)
         self._view.loop.setEnabled(True)
 
+    @pyqtSlot(Path)
     def _set_gif_display_movie_from_string(self, path: Path):
         if path == self._current_file_path:
             # trigger QRadioButton::toggled() signals
@@ -108,6 +92,10 @@ class MainViewController(QObject):
             self._view.normal_play.setChecked(True)
             self._play_movie()
             return
+
+        current_movie = self._view.movie()
+        if current_movie and current_movie.state() == QMovie.Running:
+            self._view.normal_play.setChecked(True)
 
         speed = self._view.speed()
 
@@ -123,8 +111,14 @@ class MainViewController(QObject):
         self._current_file_path = path
 
         self._view.set_movie(movie)
+        self._view.set_title(path.as_posix())
+
+        self._view.normal_play.setChecked(True)
+        self._view.set_nav_controls_visible(False)
+
         self._play_movie()
 
+    @pyqtSlot(bool)
     def _single_step_toggled(self, checked: bool):
         def _setup_starting_frame(*, current_frame, last_frame):
             if current_frame == last_frame:

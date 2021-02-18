@@ -6,6 +6,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 class MainViewModel(QObject):
     files_changed = pyqtSignal(list)
+    first_file = pyqtSignal(Path)
 
     def __init__(self) -> None:
         super().__init__()
@@ -16,7 +17,10 @@ class MainViewModel(QObject):
         return self._count
 
     def update_files_from_path(self, path: Path):
-        self.files_changed.emit(self._get_files(path))
+        files = self._get_files(path)
+        self.files_changed.emit(files)
+        if files:
+            self.first_file.emit(files[0])
 
     def _get_files(self, path: Path) -> List[Path]:
         files = [Path(file) for file in path.rglob("*.gif")]
