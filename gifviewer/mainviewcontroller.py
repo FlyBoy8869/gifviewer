@@ -1,9 +1,7 @@
 from pathlib import Path
-from typing import List
 
-from PyQt5 import QtGui
 from PyQt5.QtCore import QObject, QRect, Qt, pyqtSlot
-from PyQt5.QtGui import QIntValidator, QMovie
+from PyQt5.QtGui import QIntValidator, QMovie, QPalette
 from PyQt5.QtWidgets import QFileDialog, QListWidgetItem
 
 from gifviewer import helpers
@@ -13,13 +11,13 @@ class MainViewController(QObject):
     DEFAULT_MOVIE_SPEED = 100
     ANIMATION_PLAYING_FRAME_COLOR = Qt.red
 
-    def __init__(self, view, model):
+    def __init__(self, view, model) -> None:
         super().__init__()
         self._view = view
         self._model = model
         self._frame_validator = QIntValidator(0, 0)
         self._current_file_path = None
-        self.original_base_role_color = view.frame.palette().color(QtGui.QPalette.Base)
+        self.original_base_role_color = view.frame.palette().color(QPalette.Base)
 
         self._view.pushButtonBrowse.clicked.connect(self._browse_for_folder)
         self._view.actionBrowse.triggered.connect(self._browse_for_folder)
@@ -39,30 +37,30 @@ class MainViewController(QObject):
 
         self._view.single_step.toggled.connect(self._single_step_toggled)
 
-    def initialize_controller(self):
+    def initialize_controller(self) -> None:
         self._view.frame_number.setValidator(self._frame_validator)
 
         self._update_speed_label(self.DEFAULT_MOVIE_SPEED)
         self._model.update_files_from_path(Path("/Users/charles/Downloads/assets"))
 
     @pyqtSlot(bool)  # QPushButton::clicked(), QAction::triggered()
-    def _browse_for_folder(self, _: bool):
+    def _browse_for_folder(self, _: bool) -> None:
         path = QFileDialog.getExistingDirectory(self._view, "Select Directory", ".")
         if path:
             self._view.reset()
             self._model.update_files_from_path(Path(path))
 
-    def _play_movie(self):
+    def _play_movie(self) -> None:
         self._view.update_widget_palette(
             self._view.frame,
-            QtGui.QPalette(self._view.frame.palette()),
-            QtGui.QPalette.Base,
+            QPalette(self._view.frame.palette()),
+            QPalette.Base,
             self.ANIMATION_PLAYING_FRAME_COLOR
         )
         self._view.play_movie()
 
     @pyqtSlot(list)
-    def _populate_gif_list(self, files: List[Path]):
+    def _populate_gif_list(self, files: list[Path]) -> None:
         if not files:
             self._current_file_path = None
             self._view.single_step.setEnabled(False)
@@ -85,7 +83,7 @@ class MainViewController(QObject):
         self._view.loop.setEnabled(True)
 
     @pyqtSlot(Path)
-    def _set_gif_display_movie_from_string(self, path: Path):
+    def _set_gif_display_movie_from_string(self, path: Path) -> None:
         if path == self._current_file_path:
             # trigger QRadioButton::toggled() signals
             # which will cause nav controls to be disabled and hidden
@@ -119,7 +117,7 @@ class MainViewController(QObject):
         self._play_movie()
 
     @pyqtSlot(bool)
-    def _single_step_toggled(self, checked: bool):
+    def _single_step_toggled(self, checked: bool) -> None:
         def _setup_starting_frame(*, current_frame, last_frame):
             if current_frame == last_frame:
                 current_frame = 0
@@ -158,25 +156,25 @@ class MainViewController(QObject):
         self._view.set_nav_controls_visible(True)
 
     @pyqtSlot()  # QSlider::sliderReleased()
-    def _speed_changed(self):
+    def _speed_changed(self) -> None:
         speed = self._view.speed()
         if movie := self._view.movie():
             movie.setSpeed(speed)
             self._play_movie()
 
-    def _stop_movie(self):
+    def _stop_movie(self) -> None:
         # change the frame color
         self._view.update_widget_palette(
             self._view.frame,
-            QtGui.QPalette(self._view.frame.palette()),
-            QtGui.QPalette.Base,
+            QPalette(self._view.frame.palette()),
+            QPalette.Base,
             self.original_base_role_color
         )
 
         self._view.stop_movie()
 
     @pyqtSlot(int)  # QMovie::frameChanged()
-    def _stop_movie_if_looping_not_selected(self, frame_number):
+    def _stop_movie_if_looping_not_selected(self, frame_number) -> None:
         # this method is used instead of the QMovie::finished() signal
         # because infinite looping gifs don't cause the signal to be emitted
         if self._view.loop.isChecked():
@@ -184,19 +182,19 @@ class MainViewController(QObject):
         frame_number == self._view.movie().frameCount() - 1 and self._stop_movie()
 
     @pyqtSlot(int)  # QSlider::valueChanged()
-    def _update_speed_label(self, speed: int):
+    def _update_speed_label(self, speed: int) -> None:
         self._view.set_speed_text(speed)
 
     @pyqtSlot(QRect)  # QMovie::updated()
-    def _update_dimensions_label(self, _):
+    def _update_dimensions_label(self, _) -> None:
         movie = self._view.movie()
-        width, height = helpers.get_dimensions(movie.currentPixmap())
+        width, height = helpers.get_pixmap_dimensions(movie.currentPixmap())
         self._view.set_dimension_text(f"Dimensions: {width} x {height}")
 
         # update only needs to happen once, when the file is selected
         movie.updated.disconnect(self._update_dimensions_label)
 
-    def _update_status_bar(self):
+    def _update_status_bar(self) -> None:
         self._view.clear_status_message()
 
         # only show message if more than one item is on the list as the first item is automatically displayed

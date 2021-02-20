@@ -16,7 +16,7 @@ class MainViewModel(QObject):
     def count(self) -> int:
         return self._count
 
-    def update_files_from_path(self, path: Path):
+    def update_files_from_path(self, path: Path) -> None:
         files = self._get_files(path)
         self.files_changed.emit(files)
         if files:
