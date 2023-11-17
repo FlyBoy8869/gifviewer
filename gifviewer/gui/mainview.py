@@ -1,9 +1,9 @@
-from PyQt5.QtGui import QPalette, QCloseEvent, QMovie, QColor
-from PyQt5.QtWidgets import QWidget, QMainWindow, QMessageBox
-
-from ._qtdesignerforms import mainview_ui
+from PyQt5.QtGui import QCloseEvent, QColor, QMovie, QPalette
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
 
 from gifviewer.__init__ import __version__
+
+from ._qtdesignerforms import mainview_ui
 
 
 class MainView(QMainWindow, mainview_ui.Ui_MainView):
@@ -31,12 +31,13 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
 
     def _confirm_exit(self) -> bool:
         result = QMessageBox.question(
-            self, "Exit?", "Are you sure?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+            self,
+            "Exit?",
+            "Are you sure?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
         )
-        if result == QMessageBox.Yes:
-            return True
-        
-        return False
+        return result == QMessageBox.Yes
 
     def clear_gif_display(self) -> None:
         self.gif_display.clear()
@@ -95,7 +96,7 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
     def set_title(self, title: str = "") -> None:
         if title:
             print(title)
-            title = " - " + title
+            title = f" - {title}"
 
         self.setWindowTitle(self.TITLE_PREFIX + title)
 
@@ -106,6 +107,8 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
         self.gif_display.movie().stop()
 
     @staticmethod
-    def update_widget_palette(widget: QWidget, palette: QPalette, role: QPalette.ColorRole, color: QColor) -> None:
+    def update_widget_palette(
+        widget: QWidget, palette: QPalette, role: QPalette.ColorRole, color: QColor
+    ) -> None:
         palette.setColor(role, color)
         widget.setPalette(palette)

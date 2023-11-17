@@ -8,6 +8,8 @@ from .mainviewmodel import MainViewModel
 
 
 def main():
+    """Blast Off!"""
+
     app = QApplication(sys.argv)
 
     main_view = MainView()

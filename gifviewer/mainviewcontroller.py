@@ -1,3 +1,5 @@
+"""Provides the main view."""
+
 from pathlib import Path
 
 from PyQt5.QtCore import QObject, QRect, Qt, pyqtSlot
@@ -8,6 +10,8 @@ from gifviewer import helpers
 
 
 class MainViewController(QObject):
+    """Implements the main view."""
+
     DEFAULT_MOVIE_SPEED = 100
     ANIMATION_PLAYING_FRAME_COLOR = Qt.red
 
@@ -26,7 +30,8 @@ class MainViewController(QObject):
         self._view.speed_slider.sliderReleased.connect(self._speed_changed)
 
         self._view.gif_list.currentItemChanged.connect(
-            lambda current, _: current and self._set_gif_display_movie_from_string(current.file_path)
+            lambda current, _: current
+            and self._set_gif_display_movie_from_string(current.file_path)
         )
         self._view.gif_list.itemPressed.connect(
             lambda item: self._set_gif_display_movie_from_string(item.file_path)
@@ -45,8 +50,9 @@ class MainViewController(QObject):
 
     @pyqtSlot(bool)  # QPushButton::clicked(), QAction::triggered()
     def _browse_for_folder(self, _: bool) -> None:
-        path = QFileDialog.getExistingDirectory(self._view, "Select Directory", ".")
-        if path:
+        if path := QFileDialog.getExistingDirectory(
+            self._view, "Select Directory", "."
+        ):
             self._view.reset()
             self._model.update_files_from_path(Path(path))
 
@@ -55,7 +61,7 @@ class MainViewController(QObject):
             self._view.frame,
             QPalette(self._view.frame.palette()),
             QPalette.Base,
-            self.ANIMATION_PLAYING_FRAME_COLOR
+            self.ANIMATION_PLAYING_FRAME_COLOR,
         )
         self._view.play_movie()
 
@@ -127,7 +133,9 @@ class MainViewController(QObject):
 
         if not checked:
             helpers.disconnect_lambda_slots(signal=self._view.frame_slider.valueChanged)
-            helpers.disconnect_lambda_slots(signal=self._view.frame_number.returnPressed)
+            helpers.disconnect_lambda_slots(
+                signal=self._view.frame_number.returnPressed
+            )
             self._view.set_speed_controls_visible(True)
             self._view.set_nav_controls_visible(False)
             return
@@ -140,16 +148,24 @@ class MainViewController(QObject):
         self._view.frame_slider.setMinimum(0)
         self._view.frame_slider.setMaximum(frame_count)
 
-        self._view.frame_slider.valueChanged.connect(lambda frame: movie.jumpToFrame(frame))
-        self._view.frame_slider.valueChanged.connect(lambda frame: self._view.frame_number.setText(str(frame)))
+        self._view.frame_slider.valueChanged.connect(
+            lambda frame: movie.jumpToFrame(frame)
+        )
+        self._view.frame_slider.valueChanged.connect(
+            lambda frame: self._view.frame_number.setText(str(frame))
+        )
 
         self._frame_validator.setTop(frame_count)
 
         self._view.frame_number.returnPressed.connect(
-            lambda: self._view.frame_slider.setValue(int(self._view.frame_number.text()))
+            lambda: self._view.frame_slider.setValue(
+                int(self._view.frame_number.text())
+            )
         )
 
-        _setup_starting_frame(current_frame=movie.currentFrameNumber(), last_frame=frame_count)
+        _setup_starting_frame(
+            current_frame=movie.currentFrameNumber(), last_frame=frame_count
+        )
 
         self._view.set_speed_controls_visible(False)
 
@@ -168,7 +184,7 @@ class MainViewController(QObject):
             self._view.frame,
             QPalette(self._view.frame.palette()),
             QPalette.Base,
-            self.original_base_role_color
+            self.original_base_role_color,
         )
 
         self._view.stop_movie()
@@ -197,6 +213,7 @@ class MainViewController(QObject):
     def _update_status_bar(self) -> None:
         self._view.clear_status_message()
 
-        # only show message if more than one item is on the list as the first item is automatically displayed
+        # only show message if more than one item is on the list
+        # as the first item is automatically displayed
         if self._view.gif_list.count() > 1:
             self._view.set_status_message("Select file to preview animation.")
