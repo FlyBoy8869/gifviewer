@@ -46,15 +46,18 @@ class MainViewController(QObject):
         self._view.frame_number.setValidator(self._frame_validator)
 
         self._update_speed_label(self.DEFAULT_MOVIE_SPEED)
-        self._model.update_files_from_path(Path("/Users/charles/Downloads/assets"))
+        self._model.update_files()
 
     @pyqtSlot(bool)  # QPushButton::clicked(), QAction::triggered()
     def _browse_for_folder(self, _: bool) -> None:
+        print(f"using path for dialog: {self._model.current_path}")
         if path := QFileDialog.getExistingDirectory(
-            self._view, "Select Directory", "."
+            self._view, "Select Directory", self._model.current_path.parent.as_posix()
         ):
+            print(f"path returned from dialog box: {path=}")
             self._view.reset()
-            self._model.update_files_from_path(Path(path))
+            self._model.current_path = Path(path)
+            self._model.update_files()
 
     def _play_movie(self) -> None:
         self._view.update_widget_palette(
@@ -68,7 +71,7 @@ class MainViewController(QObject):
     @pyqtSlot(list)
     def _populate_gif_list(self, files: list[Path]) -> None:
         if not files:
-            self._current_file_path = None
+            # self._current_file_path = None
             self._view.single_step.setEnabled(False)
             self._view.loop.setEnabled(False)
             return
@@ -112,7 +115,7 @@ class MainViewController(QObject):
         movie.updated.connect(self._update_dimensions_label)
 
         self._current_gif_frame_count = movie.frameCount() - 1
-        self._current_file_path = path
+        # self._current_file_path = path
 
         self._view.set_movie(movie)
         self._view.set_title(path.as_posix())
