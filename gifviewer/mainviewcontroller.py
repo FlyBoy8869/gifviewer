@@ -12,7 +12,7 @@ from gifviewer import helpers
 class MainViewController(QObject):
     """Implements the main view."""
 
-    DEFAULT_MOVIE_SPEED = 100
+    DEFAULT_MOVIE_SPEED = 200
     ANIMATION_PLAYING_FRAME_COLOR = Qt.red
 
     def __init__(self, view, model) -> None:
@@ -22,11 +22,12 @@ class MainViewController(QObject):
         self._frame_validator = QIntValidator(0, 0)
         self._current_file_path = None
         self.original_base_role_color = view.frame.palette().color(QPalette.Base)
+        self.folder_browser = FolderBrowser()
 
         self._view.pushButtonBrowse.clicked.connect(self._browse_for_folder)
         self._view.actionBrowse.triggered.connect(self._browse_for_folder)
         self._view.loop.toggled.connect(self._play_movie)
-        self._view.speed_slider.valueChanged.connect(self._update_speed_label)
+        self._view.speed_slider.valueChanged.connect(self._set_speed_text)
         self._view.speed_slider.sliderReleased.connect(self._speed_changed)
 
         self._view.gif_list.currentItemChanged.connect(
@@ -45,19 +46,14 @@ class MainViewController(QObject):
     def initialize_controller(self) -> None:
         self._view.frame_number.setValidator(self._frame_validator)
 
-        self._update_speed_label(self.DEFAULT_MOVIE_SPEED)
-        self._model.update_files()
+        self._set_speed_text(self.DEFAULT_MOVIE_SPEED)
+        self._model.update_files(self.folder_browser.current_folder)
 
     @pyqtSlot(bool)  # QPushButton::clicked(), QAction::triggered()
     def _browse_for_folder(self, _: bool) -> None:
-        print(f"using path for dialog: {self._model.current_path}")
-        if path := QFileDialog.getExistingDirectory(
-            self._view, "Select Directory", self._model.current_path.parent.as_posix()
-        ):
-            print(f"path returned from dialog box: {path=}")
+        if path := self.folder_browser.browse(self._view, "Select Folder"):
             self._view.reset()
-            self._model.current_path = Path(path)
-            self._model.update_files()
+            self._model.update_files(path)
 
     def _play_movie(self) -> None:
         self._view.update_widget_palette(
@@ -201,8 +197,8 @@ class MainViewController(QObject):
         frame_number == self._view.movie().frameCount() - 1 and self._stop_movie()
 
     @pyqtSlot(int)  # QSlider::valueChanged()
-    def _update_speed_label(self, speed: int) -> None:
-        self._view.set_speed_text(speed)
+    def _set_speed_text(self, speed: int) -> None:
+        self._view.update_speed_label(speed)
 
     @pyqtSlot(QRect)  # QMovie::updated()
     def _update_dimensions_label(self, _) -> None:
@@ -220,3 +216,31 @@ class MainViewController(QObject):
         # as the first item is automatically displayed
         if self._view.gif_list.count() > 1:
             self._view.set_status_message("Select file to preview animation.")
+
+
+class FolderBrowser:
+    """Opens a folder browser dialog."""
+
+    def __init__(self):
+        self._current_folder = Path(".")
+
+    @property
+    def current_folder(self) -> Path:
+        return self._current_folder
+
+    def browse(self, parent, caption) -> Path | None:
+        """Browse for a folder starting at the last folder selected."""
+        return self._browse(parent, caption, self._current_folder)
+
+    def browse_from(self, parent, caption, folder) -> Path | None:
+        """Browse for a folder starting at the given folder."""
+        return self._browse(parent, caption, folder)
+
+    def _browse(self, parent, caption, folder) -> Path | None:
+        if path := QFileDialog.getExistingDirectory(
+            parent, caption, folder.parent.as_posix()
+        ):
+            self._current_folder = Path(path)
+            return self._current_folder
+
+        return None

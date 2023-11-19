@@ -87,7 +87,7 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
         self.speed_label.setVisible(visible)
         self.speed_slider.setVisible(visible)
 
-    def set_speed_text(self, speed: int) -> None:
+    def update_speed_label(self, speed: int) -> None:
         self.speed_label.setText(f"Speed [{speed:03d}]:")
 
     def set_status_message(self, message: str) -> None:
