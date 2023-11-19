@@ -27,6 +27,8 @@ class MainViewController(QObject):
         self._view.pushButtonBrowse.clicked.connect(self._browse_for_folder)
         self._view.actionBrowse.triggered.connect(self._browse_for_folder)
         self._view.loop.toggled.connect(self._play_movie)
+
+        self._view.speed_slider.setValue(self.DEFAULT_MOVIE_SPEED)
         self._view.speed_slider.valueChanged.connect(self._set_speed_text)
         self._view.speed_slider.sliderReleased.connect(self._speed_changed)
 
@@ -37,9 +39,6 @@ class MainViewController(QObject):
         self._view.gif_list.itemPressed.connect(
             lambda item: self._set_gif_display_movie_from_string(item.file_path)
         )
-
-        self._model.files_changed.connect(self._populate_gif_list)
-        self._model.first_file.connect(self._set_gif_display_movie_from_string)
 
         self._view.single_step.toggled.connect(self._single_step_toggled)
 
@@ -54,6 +53,8 @@ class MainViewController(QObject):
         if path := self.folder_browser.browse(self._view, "Select Folder"):
             self._view.reset()
             self._model.update_files(path)
+            self._populate_gif_list(self._model.files)
+            self._set_gif_display_movie_from_string(self._model.first_file)
 
     def _play_movie(self) -> None:
         self._view.update_widget_palette(
@@ -67,12 +68,11 @@ class MainViewController(QObject):
     @pyqtSlot(list)
     def _populate_gif_list(self, files: list[Path]) -> None:
         if not files:
-            # self._current_file_path = None
             self._view.single_step.setEnabled(False)
             self._view.loop.setEnabled(False)
             return
 
-        # populate
+        # populate widget
         for file in files:
             list_widget_item = QListWidgetItem(file.name)
             list_widget_item.file_path = file
