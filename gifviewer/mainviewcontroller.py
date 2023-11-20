@@ -12,7 +12,6 @@ from gifviewer import helpers
 class MainViewController(QObject):
     """Implements the main view."""
 
-    DEFAULT_MOVIE_SPEED = 200
     ANIMATION_PLAYING_FRAME_COLOR = Qt.red
 
     def __init__(self, view, model) -> None:
@@ -28,8 +27,8 @@ class MainViewController(QObject):
         self._view.actionBrowse.triggered.connect(self._browse_for_folder)
         self._view.loop.toggled.connect(self._play_movie)
 
-        self._view.speed_slider.setValue(self.DEFAULT_MOVIE_SPEED)
-        self._view.speed_slider.valueChanged.connect(self._set_speed_text)
+        self._view.speed_slider.setValue(self._model.speed)
+        self._view.speed_slider.valueChanged.connect(self._update_speed)
         self._view.speed_slider.sliderReleased.connect(self._speed_changed)
 
         self._view.gif_list.currentItemChanged.connect(
@@ -45,7 +44,7 @@ class MainViewController(QObject):
     def initialize_controller(self) -> None:
         self._view.frame_number.setValidator(self._frame_validator)
 
-        self._set_speed_text(self.DEFAULT_MOVIE_SPEED)
+        self._set_speed_text(self._model.speed)
         self._model.update_files(self.folder_browser.current_folder)
 
     @pyqtSlot(bool)  # QPushButton::clicked(), QAction::triggered()
@@ -67,6 +66,7 @@ class MainViewController(QObject):
 
     @pyqtSlot(list)
     def _populate_gif_list(self, files: list[Path]) -> None:
+        # handles the folder containing no gif files
         if not files:
             self._view.single_step.setEnabled(False)
             self._view.loop.setEnabled(False)
@@ -79,9 +79,9 @@ class MainViewController(QObject):
             self._view.gif_list.addItem(list_widget_item)
 
         # update
-        self._view.set_file_count(self._model.count)
+        self._view.update_file_count(self._model.count)
         self._view.gif_list.setCurrentItem(self._view.gif_list.item(0))
-        self._view.set_speed(self.DEFAULT_MOVIE_SPEED)
+        self._view.update_speed_slider(self._model.speed)
         self._update_status_bar()
 
         self._view.single_step.setEnabled(True)
@@ -100,24 +100,21 @@ class MainViewController(QObject):
         if current_movie and current_movie.state() == QMovie.Running:
             self._view.normal_play.setChecked(True)
 
-        speed = self._view.speed()
-
         movie: QMovie = QMovie(path.as_posix())
         movie.setCacheMode(QMovie.CacheAll)
-        movie.setSpeed(speed)
+        movie.setSpeed(self._model.speed)
         # noinspection PyUnresolvedReferences
         movie.frameChanged.connect(self._stop_movie_if_looping_not_selected)
         # noinspection PyUnresolvedReferences
         movie.updated.connect(self._update_dimensions_label)
 
         self._current_gif_frame_count = movie.frameCount() - 1
-        # self._current_file_path = path
 
         self._view.set_movie(movie)
         self._view.set_title(path.as_posix())
 
         self._view.normal_play.setChecked(True)
-        self._view.set_nav_controls_visible(False)
+        self._view.update_nav_controls_visibility(False)
 
         self._play_movie()
 
@@ -135,8 +132,8 @@ class MainViewController(QObject):
             helpers.disconnect_lambda_slots(
                 signal=self._view.frame_number.returnPressed
             )
-            self._view.set_speed_controls_visible(True)
-            self._view.set_nav_controls_visible(False)
+            self._view.update_speed_controls_visibility(True)
+            self._view.update_nav_controls_visibility(False)
             return
 
         self._stop_movie()
@@ -166,15 +163,14 @@ class MainViewController(QObject):
             current_frame=movie.currentFrameNumber(), last_frame=frame_count
         )
 
-        self._view.set_speed_controls_visible(False)
+        self._view.update_speed_controls_visibility(False)
 
-        self._view.set_nav_controls_visible(True)
+        self._view.update_nav_controls_visibility(True)
 
     @pyqtSlot()  # QSlider::sliderReleased()
     def _speed_changed(self) -> None:
-        speed = self._view.speed()
         if movie := self._view.movie():
-            movie.setSpeed(speed)
+            movie.setSpeed(self._model.speed)
             self._play_movie()
 
     def _stop_movie(self) -> None:
@@ -209,13 +205,17 @@ class MainViewController(QObject):
         # update only needs to happen once, when the file is selected
         movie.updated.disconnect(self._update_dimensions_label)
 
+    def _update_speed(self, speed: int) -> None:
+        self._model.speed = speed
+        self._view.update_speed_label(speed)
+
     def _update_status_bar(self) -> None:
         self._view.clear_status_message()
 
         # only show message if more than one item is on the list
         # as the first item is automatically displayed
         if self._view.gif_list.count() > 1:
-            self._view.set_status_message("Select file to preview animation.")
+            self._view.update_status_message("Select file to preview animation.")
 
 
 class FolderBrowser:
