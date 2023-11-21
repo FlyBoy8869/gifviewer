@@ -8,8 +8,8 @@ from gifviewer.__main__ import main
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--no-confirm-exit", action="store_true")
-args = parser.parse_args()
-settings.args = args
+cl_args = parser.parse_args()
+settings.args = cl_args
 
 if __name__ == "__main__":
     main()
