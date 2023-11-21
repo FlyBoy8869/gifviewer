@@ -1,6 +1,7 @@
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 change_log = {
+    "1.4.0": "Added a commandline argument to bypass exit confirmatio .",
     "1.3.0": "File browse dialog now resumes last path viewed.",
     "1.2.0": "Added path to the window title.\n"
     "Print path to stdout for ease of copying.",
