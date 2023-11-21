@@ -27,8 +27,8 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
         self.normal_play.setVisible(False)
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        ic(settings.args.no_confirm_exit)
-        if settings.args.no_confirm_exit:
+        ic(settings.cl_args.no_confirm_exit)
+        if settings.cl_args.no_confirm_exit:
             event.accept()
             return
 
