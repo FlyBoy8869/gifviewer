@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject
 
 DEFAULT_SPEED = 200
 
