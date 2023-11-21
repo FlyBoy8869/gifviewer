@@ -1,12 +1,9 @@
 from PyQt5.QtGui import QCloseEvent, QColor, QMovie, QPalette
 from PyQt5.QtWidgets import QMainWindow, QMessageBox, QWidget
-from icecream import ic
 
 import gifviewer.settings as settings
-
 from gifviewer.__init__ import __version__
-
-from gifviewer.gui._qtdesignerforms import mainview_ui
+from gifviewer.gui.qtdesignerforms import mainview_ui
 
 
 class MainView(QMainWindow, mainview_ui.Ui_MainView):
@@ -27,7 +24,6 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
         self.normal_play.setVisible(False)
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        ic(settings.cl_args.no_confirm_exit)
         if settings.cl_args.no_confirm_exit:
             event.accept()
             return
