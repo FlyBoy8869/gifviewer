@@ -79,7 +79,7 @@ class MainViewController(QObject):
             self._view.gif_list.addItem(list_widget_item)
 
         # update
-        self._view.update_file_count(self._model.count)
+        self._view.update_file_count_label(self._model.count)
         self._view.gif_list.setCurrentItem(self._view.gif_list.item(0))
         self._view.update_speed_slider(self._model.speed)
         self._update_status_bar()

@@ -62,7 +62,7 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
         self.gif_display.movie().start()
 
     def reset(self) -> None:
-        self.update_file_count(0)
+        self.update_file_count_label(0)
         self.clear_file_list()
         self.set_dimension_text("Dimensions: 0 x 0")
         self.clear_gif_display()
@@ -70,7 +70,7 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
     def set_dimension_text(self, text: str) -> None:
         self.dimensions_label.setText(text)
 
-    def update_file_count(self, count: int) -> None:
+    def update_file_count_label(self, count: int) -> None:
         self.files_label.setText(f"Files [{count}]:")
 
     def set_movie(self, movie: QMovie) -> None:
