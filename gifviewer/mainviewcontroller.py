@@ -111,7 +111,7 @@ class MainViewController(QObject):
         self._current_gif_frame_count = movie.frameCount() - 1
 
         self._view.set_movie(movie)
-        self._view.set_title(path.as_posix())
+        self._view.add_title_detail(path.as_posix())
 
         self._view.normal_play.setChecked(True)
         self._view.update_nav_controls_visibility(False)

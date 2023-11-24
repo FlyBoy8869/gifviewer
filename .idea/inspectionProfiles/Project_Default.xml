@@ -1,23 +1,29 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
     <option name="myName" value="Project Default" />
-    <inspection_tool class="PyArgumentListInspection" enabled="true" level="WARNING" enabled_by_default="true">
-      <scope name="Open Files" level="WARNING" enabled="true" />
+    <inspection_tool class="PyChainedComparisonsInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoreConstantInTheMiddle" value="true" />
     </inspection_tool>
-    <inspection_tool class="PyCompatibilityInspection" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="ourVersions">
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
         <value>
-          <list size="2">
-            <item index="0" class="java.lang.String" itemvalue="3.8" />
-            <item index="1" class="java.lang.String" itemvalue="3.9" />
+          <list size="1">
+            <item index="0" class="java.lang.String" itemvalue="pyqt5-qt5" />
           </list>
         </value>
       </option>
     </inspection_tool>
-    <inspection_tool class="PyStubPackagesAdvertiser" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="ignoredPackages">
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
         <list>
-          <option value="PyQt5-stubs==5.13.1.4" />
+          <option value="PyQt6.QtCore.QObject.item_clicked" />
+          <option value="tfgui.keypad_promotion.KeypadDialog.keypad" />
+          <option value="tfgui.mainwindow.MainWindow.label_ch1_phase_value" />
+          <option value="tfgui.mainwindow.MainWindow.label_ch2_phase_value" />
+          <option value="tfgui.mainwindow.MainWindow.dial" />
+          <option value="tfgui.mainwindow.MainWindow.*" />
+          <option value="PySide6.QtWidgets.clicked.connect" />
+          <option value="PySide6.QtWidgets.pressed.connect" />
         </list>
       </option>
     </inspection_tool>

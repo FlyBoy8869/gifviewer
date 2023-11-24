@@ -12,7 +12,7 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
     def __init__(self) -> None:
         super().__init__()
         self.setupUi(self)
-        self.set_title()
+        self.add_title_detail()
 
         # used to prevent playing animation for the first file selected
         # when the program starts and the QListWidget is created causing
@@ -97,12 +97,9 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
     def update_status_message(self, message: str) -> None:
         self.statusBar().showMessage(message)
 
-    def set_title(self, title: str = "") -> None:
-        if title:
-            print(title)
-            title = f" - {title}"
-
-        self.setWindowTitle(self.TITLE_PREFIX + title)
+    def add_title_detail(self, detail: str = "") -> None:
+        detail = f" - {detail}" if detail else detail
+        self.setWindowTitle(self.TITLE_PREFIX + detail)
 
     def stop_movie(self) -> None:
         self.gif_display.movie().stop()
