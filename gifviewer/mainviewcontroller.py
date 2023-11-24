@@ -7,6 +7,7 @@ from PyQt5.QtGui import QIntValidator, QMovie, QPalette
 from PyQt5.QtWidgets import QFileDialog, QListWidgetItem
 
 from gifviewer import helpers
+import gifviewer.settings as settings
 
 
 class MainViewController(QObject):
@@ -32,8 +33,7 @@ class MainViewController(QObject):
         self._view.speed_slider.sliderReleased.connect(self._speed_changed)
 
         self._view.gif_list.currentItemChanged.connect(
-            lambda current, _: current
-            and self._set_gif_display_movie_from_string(current.file_path)
+            lambda item, _: self._set_gif_display_movie_from_string(item.file_path)
         )
         self._view.gif_list.itemPressed.connect(
             lambda item: self._set_gif_display_movie_from_string(item.file_path)
@@ -224,7 +224,7 @@ class FolderBrowser:
     """Opens a folder browser dialog."""
 
     def __init__(self):
-        self._current_folder = Path(".")
+        self._current_folder = Path(settings.cl_args.start_in)
 
     @property
     def current_folder(self) -> Path:
