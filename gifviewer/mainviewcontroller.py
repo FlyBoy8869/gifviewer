@@ -25,7 +25,7 @@ class MainViewController(QObject):
 
         self._view.pushButtonBrowse.clicked.connect(self._browse_for_folder)
         self._view.actionBrowse.triggered.connect(self._browse_for_folder)
-        self._view.loop.toggled.connect(self._play_movie)
+        self._view.loop.toggled.connect(self._loop_toggled)
 
         self._view.speed_slider.setValue(self._model.speed)
         self._view.speed_slider.valueChanged.connect(self._update_speed)
@@ -40,6 +40,7 @@ class MainViewController(QObject):
         )
 
         self._view.single_step.toggled.connect(self._single_step_toggled)
+        self._view.single_step.stateChanged.connect(lambda state: print(f"{state=}"))
 
     def initialize_controller(self) -> None:
         self._view.frame_number.setValidator(self._frame_validator)
@@ -55,6 +56,13 @@ class MainViewController(QObject):
             self._populate_gif_list(self._model.files)
             self._set_gif_display_movie_from_string(self._model.first_file)
 
+    def _loop_toggled(self, checked: bool) -> None:
+        if checked:
+            self._view.single_step.setChecked(False)
+            self._play_movie()
+        else:
+            self._stop_movie()
+
     def _play_movie(self) -> None:
         self._view.update_widget_palette(
             self._view.frame,
@@ -62,7 +70,7 @@ class MainViewController(QObject):
             QPalette.Base,
             self.ANIMATION_PLAYING_FRAME_COLOR,
         )
-        self._view.play_movie()
+        self._view.gif_display.movie().start()
 
     @pyqtSlot(list)
     def _populate_gif_list(self, files: list[Path]) -> None:
@@ -120,12 +128,11 @@ class MainViewController(QObject):
 
     @pyqtSlot(bool)
     def _single_step_toggled(self, checked: bool) -> None:
-        def _setup_starting_frame(*, current_frame, last_frame):
-            if current_frame == last_frame:
-                current_frame = 0
-            self._view.frame_slider.setValue(current_frame)
-            self._view.frame_number.setText(str(current_frame))
-            movie.jumpToFrame(current_frame)
+        def _reset_gif() -> None:
+            frame = 0
+            self._view.frame_slider.setValue(frame)
+            self._view.frame_number.setText(str(frame))
+            movie.jumpToFrame(frame)
 
         if not checked:
             helpers.disconnect_lambda_slots(signal=self._view.frame_slider.valueChanged)
@@ -159,12 +166,9 @@ class MainViewController(QObject):
             )
         )
 
-        _setup_starting_frame(
-            current_frame=movie.currentFrameNumber(), last_frame=frame_count
-        )
-
+        _reset_gif()
+        self._view.loop.setChecked(False)
         self._view.update_speed_controls_visibility(False)
-
         self._view.update_nav_controls_visibility(True)
 
     @pyqtSlot()  # QSlider::sliderReleased()

@@ -58,9 +58,6 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
     def movie(self) -> QMovie:
         return self.gif_display.movie()
 
-    def play_movie(self) -> None:
-        self.gif_display.movie().start()
-
     def reset(self) -> None:
         self.update_file_count_label(0)
         self.clear_file_list()
