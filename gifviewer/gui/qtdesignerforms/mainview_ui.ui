@@ -175,7 +175,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
-            <widget class="QRadioButton" name="loop">
+            <widget class="QCheckBox" name="loop">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -185,7 +185,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="single_step">
+            <widget class="QCheckBox" name="single_step">
              <property name="enabled">
               <bool>false</bool>
              </property>
