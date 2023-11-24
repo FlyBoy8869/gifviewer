@@ -40,7 +40,6 @@ class MainViewController(QObject):
         )
 
         self._view.single_step.toggled.connect(self._single_step_toggled)
-        self._view.single_step.stateChanged.connect(lambda state: print(f"{state=}"))
 
     def initialize_controller(self) -> None:
         self._view.frame_number.setValidator(self._frame_validator)
