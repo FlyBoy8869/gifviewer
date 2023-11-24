@@ -181,8 +181,7 @@ class MainViewController(QObject):
             QPalette.Base,
             self.original_base_role_color,
         )
-
-        self._view.stop_movie()
+        self._view.gif_display.movie().stop()
 
     @pyqtSlot(int)  # QMovie::frameChanged()
     def _stop_movie_if_looping_not_selected(self, frame_number) -> None:

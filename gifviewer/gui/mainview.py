@@ -98,9 +98,6 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
         detail = f" - {detail}" if detail else detail
         self.setWindowTitle(self.TITLE_PREFIX + detail)
 
-    def stop_movie(self) -> None:
-        self.gif_display.movie().stop()
-
     @staticmethod
     def update_widget_palette(
         widget: QWidget, palette: QPalette, role: QPalette.ColorRole, color: QColor
