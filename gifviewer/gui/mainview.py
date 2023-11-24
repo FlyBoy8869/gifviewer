@@ -55,9 +55,6 @@ class MainView(QMainWindow, mainview_ui.Ui_MainView):
     def clear_status_message(self) -> None:
         self.statusBar().clearMessage()
 
-    # def hide_navigation_controls(self):
-    #     self._set_nav_controls_visibility(False)
-
     def movie(self) -> QMovie:
         return self.gif_display.movie()
 
