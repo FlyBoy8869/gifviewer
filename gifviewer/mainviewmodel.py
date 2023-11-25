@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PyQt5.QtCore import QObject
 
-DEFAULT_SPEED = 200
+DEFAULT_SPEED = 100
 
 
 class MainViewModel(QObject):
