@@ -1,4 +1,4 @@
-"""Provides the main view."""
+"""mainview.py controller."""
 
 from pathlib import Path
 
@@ -11,7 +11,7 @@ import gifviewer.settings as settings
 
 
 class MainViewController(QObject):
-    """Implements the main view."""
+    """Implements the mainview controller."""
 
     ANIMATION_PLAYING_FRAME_COLOR = Qt.GlobalColor.red
 
