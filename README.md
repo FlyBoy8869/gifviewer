@@ -1,5 +1,5 @@
 # gifviewer
-#### version 1.4.2<br><br><br>
+#### version 1.4.2<br><br>
 
 View gif files or step through one frame at a time.
 
