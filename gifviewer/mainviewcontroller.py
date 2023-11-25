@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PyQt5.QtCore import QObject, QRect, Qt, pyqtSlot
 from PyQt5.QtGui import QIntValidator, QMovie, QPalette
-from PyQt5.QtWidgets import QFileDialog, QListWidgetItem
+from PyQt5.QtWidgets import QFileDialog, QListWidgetItem, QWidget
 
 from gifviewer import helpers
 import gifviewer.settings as settings
@@ -13,20 +13,21 @@ import gifviewer.settings as settings
 class MainViewController(QObject):
     """Implements the main view."""
 
-    ANIMATION_PLAYING_FRAME_COLOR = Qt.red
+    ANIMATION_PLAYING_FRAME_COLOR = Qt.GlobalColor.red
 
     def __init__(self, view, model) -> None:
         super().__init__()
         self._view = view
         self._model = model
         self._frame_validator = QIntValidator(0, 0)
-        self._current_file_path = None
-        self.original_base_role_color = view.frame.palette().color(QPalette.Base)
-        self.folder_browser = FolderBrowser()
+        self._original_base_role_color = view.frame.palette().color(QPalette.Base)
+        self._folder_browser = FolderBrowser(start_folder=settings.cl_args.start_in)
 
         self._view.pushButtonBrowse.clicked.connect(self._browse_for_folder)
         self._view.actionBrowse.triggered.connect(self._browse_for_folder)
         self._view.loop.toggled.connect(self._loop_toggled)
+
+        self._view.frame_slider.setMinimum(0)
 
         self._view.speed_slider.setValue(self._model.speed)
         self._view.speed_slider.valueChanged.connect(self._update_speed)
@@ -43,13 +44,12 @@ class MainViewController(QObject):
 
     def initialize_controller(self) -> None:
         self._view.frame_number.setValidator(self._frame_validator)
-
         self._set_speed_text(self._model.speed)
-        self._model.update_files(self.folder_browser.current_folder)
+        self._model.update_files(self._folder_browser.current_folder)
 
     @pyqtSlot(bool)  # QPushButton::clicked(), QAction::triggered()
     def _browse_for_folder(self, _: bool) -> None:
-        if path := self.folder_browser.browse(self._view, "Select Folder"):
+        if path := self._folder_browser.browse(self._view, "Select Folder"):
             self._view.reset()
             self._model.update_files(path)
             self._populate_gif_list(self._model.files)
@@ -96,27 +96,23 @@ class MainViewController(QObject):
 
     @pyqtSlot(Path)
     def _set_gif_display_movie_from_string(self, path: Path) -> None:
-        if path == self._current_file_path:
-            # trigger QRadioButton::toggled() signals
-            # which will cause nav controls to be disabled and hidden
+        def _initialize_new_movie(path_: Path) -> QMovie:
+            movie_: QMovie = QMovie(path_.as_posix())
+            # sets CacheMode to CacheAll, so we can jump to
+            # specific frames when using single step mode
+            movie_.setCacheMode(QMovie.CacheMode.CacheAll)
+            movie_.setSpeed(self._model.speed)
+            # noinspection PyUnresolvedReferences
+            movie_.frameChanged.connect(self._stop_movie_if_looping_not_selected)
+            # noinspection PyUnresolvedReferences
+            movie_.updated.connect(self._update_dimensions_label)
+            return movie_
+
+        current_movie: QMovie = self._view.movie()
+        if current_movie and current_movie.state() == QMovie.MovieState.Running:
             self._view.normal_play.setChecked(True)
-            self._play_movie()
-            return
 
-        current_movie = self._view.movie()
-        if current_movie and current_movie.state() == QMovie.Running:
-            self._view.normal_play.setChecked(True)
-
-        movie: QMovie = QMovie(path.as_posix())
-        movie.setCacheMode(QMovie.CacheAll)
-        movie.setSpeed(self._model.speed)
-        # noinspection PyUnresolvedReferences
-        movie.frameChanged.connect(self._stop_movie_if_looping_not_selected)
-        # noinspection PyUnresolvedReferences
-        movie.updated.connect(self._update_dimensions_label)
-
-        self._current_gif_frame_count = movie.frameCount() - 1
-
+        movie: QMovie = _initialize_new_movie(path)
         self._view.set_movie(movie)
         self._view.add_title_detail(path.as_posix())
 
@@ -146,8 +142,6 @@ class MainViewController(QObject):
 
         movie = self._view.movie()
         frame_count = movie.frameCount() - 1
-
-        self._view.frame_slider.setMinimum(0)
         self._view.frame_slider.setMaximum(frame_count)
 
         self._view.frame_slider.valueChanged.connect(
@@ -182,7 +176,7 @@ class MainViewController(QObject):
             self._view.frame,
             QPalette(self._view.frame.palette()),
             QPalette.Base,
-            self.original_base_role_color,
+            self._original_base_role_color,
         )
         self._view.gif_display.movie().stop()
 
@@ -192,7 +186,10 @@ class MainViewController(QObject):
         # because infinite looping gifs don't cause the signal to be emitted
         if self._view.loop.isChecked():
             return
-        frame_number == self._view.movie().frameCount() - 1 and self._stop_movie()
+
+        # this allows the gif to play through once,
+        # stopping playback when the last frame is reached
+        (frame_number == self._view.movie().frameCount() - 1) and (self._stop_movie())
 
     @pyqtSlot(int)  # QSlider::valueChanged()
     def _set_speed_text(self, speed: int) -> None:
@@ -223,14 +220,14 @@ class MainViewController(QObject):
 class FolderBrowser:
     """Opens a folder browser dialog."""
 
-    def __init__(self):
-        self._current_folder = Path(settings.cl_args.start_in)
+    def __init__(self, *, start_folder: str = "."):
+        self._current_folder = Path(start_folder)
 
     @property
     def current_folder(self) -> Path:
         return self._current_folder
 
-    def browse(self, parent, caption) -> Path | None:
+    def browse(self, parent: QWidget, caption: str) -> Path | None:
         """Browse for a folder starting at the last folder selected."""
         return self._browse(parent, caption, self._current_folder)
 
